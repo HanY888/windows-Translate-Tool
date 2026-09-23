@@ -1,0 +1,67 @@
+# 随译 LinguaDesk
+
+<img src="assets/图标预览.png" width="96" alt="随译图标">
+
+Windows 10 / 11 x64 桌面翻译工具，支持选词、截图、文件翻译与自定义快捷键。
+
+## 下载安装
+
+[下载 v1.1.0 安装程序](downloads/随译-安装程序-1.1.0.exe?raw=true) · [SHA-256](downloads/随译-安装程序-1.1.0.sha256.txt) · [使用说明](使用说明.md)
+
+下载安装程序后双击运行。更新前请先右键托盘图标退出旧版。安装到当前用户目录，无需管理员权限、Python 或 Node.js。安装包尚未进行商业代码签名。
+
+## 功能
+
+- 选词翻译与可选的划词浮钮。
+- 框选截图，在本机 OCR 后翻译。
+- TXT、MD、SRT、CSV、LOG、DOCX、PDF 和常见图片格式。
+- 文件、桌面/文件夹空白处和托盘右键入口。
+- 自定义全局快捷键；保存后立即生效，支持冲突检测与恢复默认。
+- 免费 MyMemory 翻译，以及自定义兼容 Chat Completions 的 AI 接口。
+
+| 动作 | 默认快捷键 |
+| --- | --- |
+| 选词翻译 | Alt+Q |
+| 截图翻译 | Alt+W |
+| 打开窗口 | Alt+E |
+| 窗口内翻译 | Ctrl+Enter |
+
+## 范围和数据处理
+
+文件译文导出为 TXT，不保留 Word/PDF 排版。OCR 效果取决于图片清晰度及 Windows 已安装的识别语言。划词浮钮依赖目标应用的可访问性支持，无法读取时可以截图。Windows 11 的右键菜单入口可能需要先选择“显示更多选项”。
+
+截图和 PDF 识别在本机进行，待翻译文字会发送给使用者选择的翻译服务。免费服务有额度和网络限制。用户自行提供的 API Key 通过 Windows DPAPI 加密保存，仓库和安装包不含个人配置或密钥。
+
+## 从源码构建
+
+需要 Windows x64 和 .NET Framework 4.8。使用 Windows PowerShell 或 PowerShell 7，在仓库根目录运行：
+
+```powershell
+.\build.ps1
+```
+
+输出为 `dist/LinguaDesk-Setup-1.1.0.exe`；`dist/app/` 为便携程序文件夹。构建不需要下载 NuGet 包。
+
+运行快捷键测试：
+
+```powershell
+.\test.ps1
+```
+
+测试覆盖设置兼容、组合键验证、重复/冲突检测、保存失败回滚、按键交换和真实 Windows 热键注册。使用隐藏测试窗口，不操作用户桌面或个人配置。
+
+`source/SmokeTests.cs` 另包含 OCR、文件编码及翻译服务集成测试代码；它需要单独准备测试图片/PDF、系统 OCR 语言组件和网络环境，不包含在默认测试命令中。
+
+## 文件结构
+
+```text
+source/       C# 程序、安装器与测试源码
+assets/       Windows 图标与预览图
+downloads/    已构建的 v1.1.0 安装程序和校验值
+ocr.ps1       Windows 本地 OCR / PDF 识别桥接
+language-profiles.json   本地语言识别数据
+build.ps1     一键构建
+test.ps1      快捷键测试
+```
+
+第三方语言数据来源及许可证见 [第三方许可](第三方许可.txt)。
