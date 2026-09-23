@@ -18,34 +18,56 @@ function AwaitAction($Operation) {
     $task = $method.Invoke($null,@($Operation))
     $null = $task.GetAwaiter().GetResult()
 }
+function RecognizeAtScale($Decoder, [double]$Scale) {
+    $transform = New-Object Windows.Graphics.Imaging.BitmapTransform
+    $transform.InterpolationMode = [Windows.Graphics.Imaging.BitmapInterpolationMode]::Cubic
+    $transform.ScaledWidth = [uint32][Math]::Max(1,[Math]::Floor($Decoder.PixelWidth * $Scale))
+    $transform.ScaledHeight = [uint32][Math]::Max(1,[Math]::Floor($Decoder.PixelHeight * $Scale))
+    $bitmap = Await ($Decoder.GetSoftwareBitmapAsync([Windows.Graphics.Imaging.BitmapPixelFormat]::Bgra8,[Windows.Graphics.Imaging.BitmapAlphaMode]::Premultiplied,$transform,[Windows.Graphics.Imaging.ExifOrientationMode]::RespectExifOrientation,[Windows.Graphics.Imaging.ColorManagementMode]::DoNotColorManage)) ([Windows.Graphics.Imaging.SoftwareBitmap])
+    try { return (Await ($script:engine.RecognizeAsync($bitmap)) ([Windows.Media.Ocr.OcrResult])) }
+    finally { $bitmap.Dispose() }
+}
+function FormatOcrResult($Result) {
+    $lines = foreach ($line in $Result.Lines) {
+        $lineText = New-Object Text.StringBuilder
+        $previous = $null
+        foreach ($word in $line.Words) {
+            if ($previous) {
+                $gap = $word.BoundingRect.X - ($previous.BoundingRect.X + $previous.BoundingRect.Width)
+                $tight = $gap -lt ([Math]::Min($previous.BoundingRect.Height,$word.BoundingRect.Height) * 0.15)
+                $bothCjk = $previous.Text -match '[\u4e00-\u9fff]$' -and $word.Text -match '^[\u4e00-\u9fff]'
+                if (!$tight -and !$bothCjk) { $null = $lineText.Append(' ') }
+            }
+            $null = $lineText.Append($word.Text)
+            $previous = $word
+        }
+        $lineText.ToString()
+    }
+    return ($lines -join "`r`n")
+}
 function ReadImage($Stream) {
     $decoder = Await ([Windows.Graphics.Imaging.BitmapDecoder]::CreateAsync($Stream)) ([Windows.Graphics.Imaging.BitmapDecoder])
     $limit = [Windows.Media.Ocr.OcrEngine]::MaxImageDimension
-    $transform = New-Object Windows.Graphics.Imaging.BitmapTransform
-    $scale = [Math]::Min(1.0, ($limit - 1) / [Math]::Max($decoder.PixelWidth,$decoder.PixelHeight))
-    $transform.ScaledWidth = [uint32][Math]::Max(1,[Math]::Floor($decoder.PixelWidth * $scale))
-    $transform.ScaledHeight = [uint32][Math]::Max(1,[Math]::Floor($decoder.PixelHeight * $scale))
-    $bitmap = Await ($decoder.GetSoftwareBitmapAsync([Windows.Graphics.Imaging.BitmapPixelFormat]::Bgra8,[Windows.Graphics.Imaging.BitmapAlphaMode]::Premultiplied,$transform,[Windows.Graphics.Imaging.ExifOrientationMode]::RespectExifOrientation,[Windows.Graphics.Imaging.ColorManagementMode]::DoNotColorManage)) ([Windows.Graphics.Imaging.SoftwareBitmap])
-    try {
-        $result = Await ($script:engine.RecognizeAsync($bitmap)) ([Windows.Media.Ocr.OcrResult])
-        $lines = foreach ($line in $result.Lines) {
-            $lineText = New-Object Text.StringBuilder
-            $previous = $null
-            foreach ($word in $line.Words) {
-                if ($previous) {
-                    $gap = $word.BoundingRect.X - ($previous.BoundingRect.X + $previous.BoundingRect.Width)
-                    $tight = $gap -lt ([Math]::Min($previous.BoundingRect.Height,$word.BoundingRect.Height) * 0.15)
-                    $bothCjk = $previous.Text -match '[\u4e00-\u9fff]$' -and $word.Text -match '^[\u4e00-\u9fff]'
-                    if (!$tight -and !$bothCjk) { $null = $lineText.Append(' ') }
-                }
-                $null = $lineText.Append($word.Text)
-                $previous = $word
-            }
-            $lineText.ToString()
+    $maxScale = ($limit - 1) / [Math]::Max($decoder.PixelWidth,$decoder.PixelHeight)
+    $baseScale = [Math]::Min(1.0,$maxScale)
+    $result = RecognizeAtScale $decoder $baseScale
+    $original = FormatOcrResult $result
+    # Small text can produce no words at all, so an empty first pass must still retry.
+    $heights = @($result.Lines | ForEach-Object { $_.Words } | ForEach-Object { $_.BoundingRect.Height } | Where-Object { $_ -gt 0 } | Sort-Object)
+    $median = if ($heights.Count) { [double]$heights[[int][Math]::Floor($heights.Count / 2)] } else { 0.0 }
+    if ($median -lt 14 -and $maxScale -gt ($baseScale * 1.2)) {
+        $requested = $baseScale * 2.0
+        $scale = [Math]::Min($requested,$maxScale)
+        try {
+            $enhanced = FormatOcrResult (RecognizeAtScale $decoder $scale)
+            if (![string]::IsNullOrWhiteSpace($enhanced)) { return $enhanced }
+        } catch {
+            if ([string]::IsNullOrWhiteSpace($original)) { throw }
         }
-        return ($lines -join "`r`n")
-    } finally { $bitmap.Dispose() }
+    }
+    return $original
 }
+
 try {
     $script:engine = $null
     if ($Language -ne 'auto') {

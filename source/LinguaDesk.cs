@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -20,8 +20,8 @@ using System.Xml.Linq;
 
 [assembly: System.Reflection.AssemblyTitle("随译 LinguaDesk")]
 [assembly: System.Reflection.AssemblyProduct("LinguaDesk")]
-[assembly: System.Reflection.AssemblyVersion("1.1.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.1.0.0")]
+[assembly: System.Reflection.AssemblyVersion("1.1.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.1.1.0")]
 
 namespace LinguaDesk {
 static class Native {

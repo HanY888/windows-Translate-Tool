@@ -6,7 +6,7 @@ Windows 10 / 11 x64 桌面翻译工具，支持选词、截图、文件翻译与
 
 ## 下载安装
 
-[下载 v1.1.0 安装程序](downloads/随译-安装程序-1.1.0.exe?raw=true) · [SHA-256](downloads/随译-安装程序-1.1.0.sha256.txt) · [使用说明](使用说明.md)
+[下载 v1.1.1 安装程序](downloads/随译-安装程序-1.1.1.exe?raw=true) · [SHA-256](downloads/随译-安装程序-1.1.1.sha256.txt) · [使用说明](使用说明.md)
 
 下载安装程序后双击运行。更新前请先右键托盘图标退出旧版。安装到当前用户目录，无需管理员权限、Python 或 Node.js。安装包尚未进行商业代码签名。
 
@@ -14,6 +14,7 @@ Windows 10 / 11 x64 桌面翻译工具，支持选词、截图、文件翻译与
 
 - 选词翻译与可选的划词浮钮。
 - 框选截图，在本机 OCR 后翻译。
+- 小字号截图自动尝试两倍放大识别；正常字号保持原尺寸识别。
 - TXT、MD、SRT、CSV、LOG、DOCX、PDF 和常见图片格式。
 - 文件、桌面/文件夹空白处和托盘右键入口。
 - 自定义全局快捷键；保存后立即生效，支持冲突检测与恢复默认。
@@ -40,7 +41,7 @@ Windows 10 / 11 x64 桌面翻译工具，支持选词、截图、文件翻译与
 .\build.ps1
 ```
 
-输出为 `dist/LinguaDesk-Setup-1.1.0.exe`；`dist/app/` 为便携程序文件夹。构建不需要下载 NuGet 包。
+输出为 `dist/LinguaDesk-Setup-1.1.1.exe`；`dist/app/` 为便携程序文件夹。构建不需要下载 NuGet 包。
 
 运行快捷键测试：
 
@@ -52,12 +53,14 @@ Windows 10 / 11 x64 桌面翻译工具，支持选词、截图、文件翻译与
 
 `source/SmokeTests.cs` 另包含 OCR、文件编码及翻译服务集成测试代码；它需要单独准备测试图片/PDF、系统 OCR 语言组件和网络环境，不包含在默认测试命令中。
 
+已安装简体中文识别组件的电脑，可运行 `source/OcrSmallTextTests.ps1` 验证 12、16、32 像素中文字及空白截图。本地识别测试不会发送文字到翻译服务。
+
 ## 文件结构
 
 ```text
 source/       C# 程序、安装器与测试源码
 assets/       Windows 图标与预览图
-downloads/    已构建的 v1.1.0 安装程序和校验值
+downloads/    已构建的 v1.1.1 安装程序和校验值
 ocr.ps1       Windows 本地 OCR / PDF 识别桥接
 language-profiles.json   本地语言识别数据
 build.ps1     一键构建

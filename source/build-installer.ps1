@@ -1,4 +1,4 @@
-﻿param([string]$OutputPath = (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) '随译-安装程序-1.1.0.exe'),[string]$PayloadRoot = (Split-Path $PSScriptRoot -Parent))
+﻿param([string]$OutputPath = (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) '随译-安装程序-1.1.1.exe'),[string]$PayloadRoot = (Split-Path $PSScriptRoot -Parent))
 $ErrorActionPreference = 'Stop'
 $framework = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319'
 $root = $PayloadRoot
