@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -13,8 +13,8 @@ using Microsoft.Win32;
 
 [assembly: AssemblyTitle("随译 LinguaDesk 安装程序")]
 [assembly: AssemblyProduct("LinguaDesk")]
-[assembly: AssemblyVersion("1.1.1.0")]
-[assembly: AssemblyFileVersion("1.1.1.0")]
+[assembly: AssemblyVersion("1.2.0.0")]
+[assembly: AssemblyFileVersion("1.2.0.0")]
 namespace LinguaDeskInstaller {
 static class Installer {
     [DllImport("shell32.dll")]static extern void SHChangeNotify(uint eventId,uint flags,IntPtr first,IntPtr second);
@@ -54,7 +54,7 @@ static class Installer {
         Directory.CreateDirectory(StartMenuDir);Shortcut(Path.Combine(StartMenuDir,"随译 LinguaDesk.lnk"),Path.Combine(InstallDir,"LinguaDesk.exe"),"");Shortcut(Path.Combine(StartMenuDir,"卸载随译.lnk"),Path.Combine(InstallDir,"Uninstall.exe"),"--uninstall");if(desktop)Shortcut(DesktopLink,Path.Combine(InstallDir,"LinguaDesk.exe"),"");
         RegisterMenus();
         SHChangeNotify(0x08000000,0,IntPtr.Zero,IntPtr.Zero);
-        using(var key=Registry.CurrentUser.CreateSubKey(RegistryPath)){key.SetValue("DisplayName","随译 LinguaDesk");key.SetValue("DisplayVersion","1.1.1");key.SetValue("Publisher","LinguaDesk");key.SetValue("InstallLocation",InstallDir);key.SetValue("DisplayIcon",Path.Combine(InstallDir,"LinguaDesk.exe"));key.SetValue("UninstallString","\""+Path.Combine(InstallDir,"Uninstall.exe")+"\" --uninstall");key.SetValue("NoModify",1);key.SetValue("NoRepair",1);key.SetValue("EstimatedSize",(int)(new FileInfo(Application.ExecutablePath).Length/1024+200));}
+        using(var key=Registry.CurrentUser.CreateSubKey(RegistryPath)){key.SetValue("DisplayName","随译 LinguaDesk");key.SetValue("DisplayVersion","1.2.0");key.SetValue("Publisher","LinguaDesk");key.SetValue("InstallLocation",InstallDir);key.SetValue("DisplayIcon",Path.Combine(InstallDir,"LinguaDesk.exe"));key.SetValue("UninstallString","\""+Path.Combine(InstallDir,"Uninstall.exe")+"\" --uninstall");key.SetValue("NoModify",1);key.SetValue("NoRepair",1);key.SetValue("EstimatedSize",(int)(new FileInfo(Application.ExecutablePath).Length/1024+200));}
     }
     public static void BeginUninstall(){if(IsRunning())throw new Exception("随译正在运行，请先右键托盘图标选择“退出”，再卸载。");string temp=Path.Combine(Path.GetTempPath(),"LinguaDesk-Uninstall-"+Guid.NewGuid().ToString("N")+".exe");File.Copy(Application.ExecutablePath,temp);Process.Start(new ProcessStartInfo(temp,"--remove"){UseShellExecute=false});}
     public static void Remove(){
@@ -64,7 +64,7 @@ static class Installer {
         string self=Path.Combine(InstallDir,"Uninstall.exe");for(int i=0;;i++){try{File.Delete(self);break;}catch(IOException){if(i>=20)throw;Thread.Sleep(250);}}
         if(Directory.Exists(InstallDir)&&Directory.GetFileSystemEntries(InstallDir).Length==0)Directory.Delete(InstallDir);
         File.Delete(DesktopLink);File.Delete(Path.Combine(StartMenuDir,"随译 LinguaDesk.lnk"));File.Delete(Path.Combine(StartMenuDir,"卸载随译.lnk"));if(Directory.Exists(StartMenuDir)&&Directory.GetFileSystemEntries(StartMenuDir).Length==0)Directory.Delete(StartMenuDir);
-        RemoveMenus();Registry.CurrentUser.DeleteSubKey(RegistryPath,false);
+        using(var run=Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run",true)){if(run!=null)run.DeleteValue("LinguaDesk",false);}RemoveMenus();Registry.CurrentUser.DeleteSubKey(RegistryPath,false);
     }
 }
 class SetupForm:Form {

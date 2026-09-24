@@ -8,3 +8,9 @@ $executable = Join-Path $testDir 'HotkeyTests.exe'
 if ($LASTEXITCODE -ne 0) { throw '测试编译失败' }
 & $executable
 if ($LASTEXITCODE -ne 0) { throw '快捷键测试未通过' }
+$executable = Join-Path $testDir 'FeatureTests.exe'
+& (Join-Path $framework 'csc.exe') /nologo /target:exe /platform:x64 /main:LinguaDesk.FeatureTests ('/out:' + $executable) ('/win32icon:' + (Join-Path $PSScriptRoot 'assets\LinguaDesk.ico')) @refs (Join-Path $PSScriptRoot 'source\LinguaDesk.cs') (Join-Path $PSScriptRoot 'source\Hotkeys.cs') (Join-Path $PSScriptRoot 'source\FeatureTests.cs')
+if ($LASTEXITCODE -ne 0) { throw '测试编译失败' }
+& $executable
+if ($LASTEXITCODE -ne 0) { throw '功能测试未通过' }
+
